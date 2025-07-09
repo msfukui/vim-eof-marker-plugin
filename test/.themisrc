@@ -1,0 +1,11 @@
+" test/.themisrc
+" vim-themis設定ファイル
+
+" プラグインパスの追加
+let &runtimepath = expand('<sfile>:p:h:h') . ',' . &runtimepath
+
+" テスト用の設定
+let g:eof_marker_test_mode = 1
+
+" デバッグ用設定
+let g:eof_marker_debug = 1

@@ -1,0 +1,168 @@
+" test/eof_marker.vimspec
+" vim-themis テストスペックファイル
+
+let s:suite = themis#suite('eof_marker')
+let s:assert = themis#helper('assert')
+
+function! s:suite.before_each()
+  " 各テスト前の共通処理
+  " 新しいバッファを作成
+  tabnew
+endfunction
+
+function! s:suite.after_each()
+  " 各テスト後のクリーンアップ
+  " バッファを削除
+  bdelete!
+endfunction
+
+" Phase 3.1: プラグイン初期化のテスト
+function! s:suite.test_plugin_initialization()
+  " プラグインが読み込まれているかテスト
+  call s:assert.exists('g:eof_marker_loaded')
+endfunction
+
+" Phase 3.2: バッファ検出機能のテスト
+function! s:suite.test_buffer_detection()
+  call eof_marker#setup_buffer()
+  call s:assert.true(eof_marker#is_buffer_tracked(bufnr('%')))
+endfunction
+
+" Phase 3.3: EOF マーク表示機能のテスト
+function! s:suite.test_eof_marker_display()
+  " テストデータを作成
+  call append(0, ['line1', 'line2', 'line3'])
+  1delete " 空行を削除
+  
+  " 元の行数を記録
+  let original_lines = line('$')
+  let last_line_content = getline(line('$'))
+  
+  " EOFマーカーを追加
+  call eof_marker#add_eof_marker()
+  
+  " マーカー情報をチェック
+  let markers = eof_marker#get_markers(bufnr('%'))
+  call s:assert.equal(len(markers), 1)
+  call s:assert.equal(markers[0].text, '[EOF]')
+  
+  " 重要: EOFマーカーが独立した行に表示されることを確認
+  call s:assert.equal(line('$'), original_lines + 1, 'EOF marker should add a new line')
+  
+  " 最後の行の内容が空であることを確認（textpropで表示される）
+  call s:assert.equal(getline(line('$')), '', 'EOF marker line should be empty')
+  
+  " 元の最後の行の内容が変更されていないことを確認
+  call s:assert.equal(getline(original_lines), last_line_content, 'Original last line should not be modified')
+endfunction
+
+" Phase 3.4: スタイリング機能のテスト
+function! s:suite.test_eof_marker_styling()
+  " プラグインを読み込んでからハイライトグループをチェック
+  runtime! plugin/eof_marker.vim
+  call s:assert.true(hlexists('EofMarker'))
+  
+  " 灰色のハイライトが適用されているかテスト
+  let hl = eof_marker#get_highlight_info()
+  call s:assert.true(!empty(hl.ctermfg) || !empty(hl.guifg))
+endfunction
+
+" Phase 3.5: カーソル制御機能のテスト
+function! s:suite.test_cursor_control()
+  call append(0, ['line1', 'line2'])
+  1delete " 空行を削除
+  call eof_marker#add_eof_marker()
+  
+  " 元のコンテンツの最後の行に移動
+  let content_last_line = line('$') - 1
+  call cursor(content_last_line, 1)
+  
+  " EOFマーカーの行に移動を試みる
+  normal! j
+  let current_line = line('.')
+  
+  " カーソル制御機能をテスト
+  call eof_marker#prevent_cursor_on_eof()
+  let controlled_line = line('.')
+  
+  " EOFマーカーの行ではなく、コンテンツの最後の行にいることを確認
+  call s:assert.equal(controlled_line, content_last_line, 'Cursor should be controlled to stay in content area')
+endfunction
+
+" Phase 3.6: ファイル保存時の処理テスト
+function! s:suite.test_file_saving()
+  let temp_file = tempname()
+  execute 'edit! ' . temp_file
+  " バッファの状態を安定させる
+  %delete
+  call setline(1, ['line1', 'line2'])
+  
+  " 保存前の行数を記録
+  let lines_before_eof = line('$')
+  
+  call eof_marker#add_eof_marker()
+  
+  " EOFマーカー追加後の行数を確認
+  let lines_after_eof = line('$')
+  call s:assert.equal(lines_after_eof, lines_before_eof + 1, 'EOF marker should add one line')
+  
+  " 強制保存
+  execute 'write! ' . temp_file
+  let content = readfile(temp_file)
+  
+  " 保存されたファイルにEOFマーカーが含まれていないことを確認
+  call s:assert.equal(len(content), lines_before_eof, 'Saved file should not include EOF marker line')
+  
+  for line in content
+    call s:assert.not_match(line, '\[EOF\]', 'EOF marker text should not be in saved content')
+  endfor
+  
+  " 期待される内容と一致することを確認
+  call s:assert.equal(content, ['line1', 'line2'], 'Saved content should match original')
+  
+  call delete(temp_file)
+endfunction
+
+" Phase 3.7: 表示位置の正確性テスト（重要な追加テスト）
+function! s:suite.test_eof_marker_position()
+  " 一般的なテキストでテスト
+  call append(0, ['Hello, world!', 'This is a test file.', 'Last line of content.'])
+  1delete " 空行を削除
+  
+  " 最後の行の内容を記録
+  let last_line_original = getline(line('$'))
+  
+  call eof_marker#add_eof_marker()
+  
+  " 最後の行の内容が変更されていないことを確認（重要）
+  let content_last_line = line('$') - 1
+  call s:assert.equal(getline(content_last_line), last_line_original, 'Last content line should not be modified')
+  
+  " 最後の行に [EOF] が追加されていないことを確認
+  call s:assert.not_match(getline(content_last_line), '\[EOF\]', 'EOF marker should not be appended to content line')
+  
+  " EOFマーカーが独立した行にあることを確認
+  call s:assert.equal(getline(line('$')), '', 'EOF marker should be on its own empty line')
+endfunction
+
+" Phase 3.8: 削除機能の正確性テスト
+function! s:suite.test_eof_marker_removal()
+  " バッファをクリアしてテストデータを作成
+  %delete
+  call append(0, ['First line', 'Second line'])
+  1delete " 空行を削除
+  
+  let original_lines = line('$')
+  
+  " マーカーを追加
+  call eof_marker#add_eof_marker()
+  call s:assert.equal(line('$'), original_lines + 1, 'EOF marker should add a line')
+  
+  " マーカーを削除
+  call eof_marker#remove_eof_marker()
+  call s:assert.equal(line('$'), original_lines, 'EOF marker line should be removed')
+  
+  " マーカー情報がクリアされていることを確認
+  let markers = eof_marker#get_markers(bufnr('%'))
+  call s:assert.equal(len(markers), 0, 'No markers should remain after removal')
+endfunction

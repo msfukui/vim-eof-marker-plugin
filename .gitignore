@@ -1,0 +1,31 @@
+# Vim swap files
+*.swp
+*.swo
+*~
+
+# Vim session files
+Session.vim
+
+# Temporary files
+.netrwhist
+*.tmp
+
+# vim-themis test cache
+.themis/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Backup files
+*.bak
+*.backup

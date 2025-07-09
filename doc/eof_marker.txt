@@ -1,0 +1,129 @@
+*eof_marker.txt* Vim EOF Marker Plugin
+
+                    Vim EOF Marker Plugin
+
+Author: Generated Plugin
+License: MIT
+Version: 1.0.0
+
+==============================================================================
+CONTENTS                                            *eof-marker-contents*
+
+1. Introduction                             |eof-marker-introduction|
+2. Installation                             |eof-marker-installation|
+3. Usage                                    |eof-marker-usage|
+4. Configuration                            |eof-marker-configuration|
+5. Commands                                 |eof-marker-commands|
+6. Functions                                |eof-marker-functions|
+7. Changelog                                |eof-marker-changelog|
+
+==============================================================================
+1. Introduction                             *eof-marker-introduction*
+
+Vim EOF Marker Pluginは、Vimのファイルバッファの末尾に薄い灰色で "[EOF]" 
+マークを表示するプラグインです。
+
+主な特徴:
+- ファイルバッファの一番末尾に "[EOF]" を薄い灰色で表示
+- カーソルは "[EOF]" マークに移動できない
+- "[EOF]" マークはファイル内容に含まれない（表示専用）
+- 通常のVim（NeoVimではない）で動作
+
+==============================================================================
+2. Installation                             *eof-marker-installation*
+
+プラグインマネージャーを使用してインストールしてください。
+
+vim-plugの場合:
+>
+    Plug 'msfukui/vim-eof-plugin'
+<
+
+Vundleの場合:
+>
+    Plugin 'msfukui/vim-eof-plugin'
+<
+
+手動インストールの場合、ファイルを以下のディレクトリに配置してください:
+>
+    ~/.vim/plugin/eof_marker.vim
+    ~/.vim/autoload/eof_marker.vim
+    ~/.vim/doc/eof_marker.txt
+<
+
+==============================================================================
+3. Usage                                    *eof-marker-usage*
+
+プラグインをインストールすると、自動的にすべてのバッファでEOFマーカーが
+表示されます。
+
+手動でマーカーの表示/非表示を切り替えるには、以下のコマンドを使用してください:
+>
+    :EofMarkerToggle
+<
+
+==============================================================================
+4. Configuration                            *eof-marker-configuration*
+
+以下の変数でプラグインの動作をカスタマイズできます:
+
+                                            *g:eof_marker_enabled*
+g:eof_marker_enabled
+    プラグインの有効/無効を制御します。
+    デフォルト: 1 (有効)
+>
+    let g:eof_marker_enabled = 0  " プラグインを無効にする
+<
+
+                                            *g:eof_marker_text*
+g:eof_marker_text
+    表示するEOFマーカーのテキストを設定します。
+    デフォルト: '[EOF]'
+>
+    let g:eof_marker_text = '~ EOF ~'  " カスタムテキスト
+<
+
+==============================================================================
+5. Commands                                 *eof-marker-commands*
+
+                                            *:EofMarkerToggle*
+:EofMarkerToggle
+    EOFマーカーの表示/非表示を切り替えます。
+
+                                            *:EofMarkerShow*
+:EofMarkerShow
+    EOFマーカーを表示します。
+
+                                            *:EofMarkerHide*
+:EofMarkerHide
+    EOFマーカーを非表示にします。
+
+==============================================================================
+6. Functions                                *eof-marker-functions*
+
+                                            *eof_marker#setup_buffer()*
+eof_marker#setup_buffer()
+    現在のバッファでEOFマーカーをセットアップします。
+
+                                            *eof_marker#add_eof_marker()*
+eof_marker#add_eof_marker()
+    現在のバッファにEOFマーカーを追加します。
+
+                                            *eof_marker#remove_eof_marker()*
+eof_marker#remove_eof_marker()
+    現在のバッファからEOFマーカーを削除します。
+
+                                            *eof_marker#toggle()*
+eof_marker#toggle()
+    EOFマーカーの表示/非表示を切り替えます。
+
+==============================================================================
+7. Changelog                                *eof-marker-changelog*
+
+1.0.0   初回リリース
+        - 基本的なEOFマーカー表示機能
+        - カーソル制御機能
+        - ファイル保存時の処理
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
