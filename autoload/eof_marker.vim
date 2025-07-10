@@ -180,35 +180,69 @@ function! eof_marker#get_highlight_info()
   return hl_info
 endfunction
 
+" Gコマンドかどうかを判定する関数
+function! eof_marker#is_g_command_movement(bufnr, content_last_line)
+  " 最後に記録された位置が最後のコンテンツ行でない場合、Gコマンドと判断
+  if has_key(s:last_cursor_pos, a:bufnr)
+    let [last_line, last_col] = s:last_cursor_pos[a:bufnr]
+    return last_line != a:content_last_line
+  endif
+  return 0
+endfunction
+
+" カーソル位置を記録する関数
+function! s:record_cursor_position(bufnr, line, col, eof_line)
+  if a:line != a:eof_line
+    let s:last_cursor_pos[a:bufnr] = [a:line, a:col]
+  endif
+endfunction
+
+" Gコマンド用のカーソル移動
+function! s:handle_g_command_movement(content_last_line)
+  call cursor(a:content_last_line, 1)
+endfunction
+
+" 通常移動用のカーソル復元
+function! s:handle_normal_movement(bufnr, content_last_line)
+  if has_key(s:last_cursor_pos, a:bufnr)
+    let [last_line, last_col] = s:last_cursor_pos[a:bufnr]
+    call cursor(last_line, last_col)
+  else
+    " フォールバック: 最後の行の先頭に移動
+    call cursor(a:content_last_line, 1)
+  endif
+endfunction
+
 " カーソルがEOFマーカー上に移動するのを防ぐ
 function! eof_marker#prevent_cursor_on_eof()
   let bufnr = bufnr('%')
   
-  if has_key(s:eof_markers, bufnr)
-    let current_line = line('.')
-    let current_col = col('.')
-    let marker = s:eof_markers[bufnr][0]
-    
-    if has_key(marker, 'eof_line')
-      let eof_line = marker.eof_line
-      let content_last_line = eof_line - 1
-      
-      " 現在の位置を記録（EOFマーカー行でない場合のみ）
-      if current_line != eof_line
-        let s:last_cursor_pos[bufnr] = [current_line, current_col]
-      endif
-      
-      " EOFマーカーの行にカーソルがある場合の処理
-      if current_line == eof_line
-        " 最後に記録された有効な位置に戻す（移動しないようにする）
-        if has_key(s:last_cursor_pos, bufnr)
-          let [last_line, last_col] = s:last_cursor_pos[bufnr]
-          call cursor(last_line, last_col)
-        else
-          " フォールバック: 最後の行の先頭に移動
-          call cursor(content_last_line, 1)
-        endif
-      endif
+  if !has_key(s:eof_markers, bufnr)
+    return
+  endif
+  
+  let current_line = line('.')
+  let current_col = col('.')
+  let marker = s:eof_markers[bufnr][0]
+  
+  if !has_key(marker, 'eof_line')
+    return
+  endif
+  
+  let eof_line = marker.eof_line
+  let content_last_line = eof_line - 1
+  
+  " 現在の位置を記録（EOFマーカー行でない場合のみ）
+  call s:record_cursor_position(bufnr, current_line, current_col, eof_line)
+  
+  " EOFマーカーの行にカーソルがある場合の処理
+  if current_line == eof_line
+    if eof_marker#is_g_command_movement(bufnr, content_last_line)
+      " Gコマンド: 最後の行の先頭に移動
+      call s:handle_g_command_movement(content_last_line)
+    else
+      " 通常の移動（jキーなど）: 最後に記録された有効な位置に戻す
+      call s:handle_normal_movement(bufnr, content_last_line)
     endif
   endif
 endfunction

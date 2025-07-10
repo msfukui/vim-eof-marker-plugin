@@ -208,8 +208,8 @@ function! s:suite.test_end_of_file_movement()
   call s:assert.equal(final_col, initial_col, 'Should stay at same column position')
 endfunction
 
-" Phase 3.10: Gコマンドの特別な動作テスト
-function! s:suite.test_g_command_from_beginning()
+" Phase 3.10: Gコマンドの正しい動作テスト
+function! s:suite.test_g_command_proper_behavior()
   " テストデータを作成
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
@@ -218,6 +218,63 @@ function! s:suite.test_g_command_from_beginning()
   
   " ファイルの先頭に移動
   call cursor(1, 1)
+  
+  " Gコマンドをシミュレート（EOFマーカー行に移動）
+  call cursor(line('$'), 1)
+  
+  " カーソル制御機能を実行
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " コンテンツの最後の行の先頭に移動していることを確認（Gコマンドの期待動作）
+  let content_last_line = line('$') - 1
+  let final_line = line('.')
+  let final_col = col('.')
+  call s:assert.equal(final_line, content_last_line, 'G command should move to last content line')
+  call s:assert.equal(final_col, 1, 'G command should move to beginning of last line')
+endfunction
+
+" Phase 3.11: ファイル末尾でのj移動阻止テスト
+function! s:suite.test_j_movement_prevention()
+  " テストデータを作成
+  call append(0, ['line1', 'line2', 'line3'])
+  1delete " 空行を削除
+  
+  call eof_marker#add_eof_marker()
+  
+  " コンテンツの最後の行の途中に移動
+  let content_last_line = line('$') - 1
+  call cursor(content_last_line, 3)
+  
+  " カーソル制御機能を初期化（現在位置を記録）
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " 初期位置を記録
+  let initial_line = line('.')
+  let initial_col = col('.')
+  
+  " jキーでEOFマーカー行に移動を試行
+  call cursor(line('$'), 1)
+  
+  " カーソル制御機能を実行
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " 元の位置に戻されていることを確認（移動しない）
+  let final_line = line('.')
+  let final_col = col('.')
+  call s:assert.equal(final_line, initial_line, 'j movement should be prevented')
+  call s:assert.equal(final_col, initial_col, 'Should stay at same column position')
+endfunction
+
+" Phase 3.12: Gコマンドの実際のシナリオテスト（失敗を期待）
+function! s:suite.test_g_command_actual_scenario()
+  " テストデータを作成
+  call append(0, ['line1', 'line2', 'line3'])
+  1delete " 空行を削除
+  
+  call eof_marker#add_eof_marker()
+  
+  " ファイルの途中に移動
+  call cursor(2, 2)
   
   " カーソル制御機能を初期化（現在位置を記録）
   call eof_marker#prevent_cursor_on_eof()
@@ -228,9 +285,13 @@ function! s:suite.test_g_command_from_beginning()
   " カーソル制御機能を実行
   call eof_marker#prevent_cursor_on_eof()
   
-  " 先頭位置（記録された位置）に戻されていることを確認
+  " コンテンツの最後の行の先頭に移動していることを確認（Gコマンドの期待動作）
+  " 現在の実装では途中の位置（2行目、2列目）に戻ってしまう問題をテスト
+  let content_last_line = line('$') - 1
   let final_line = line('.')
   let final_col = col('.')
-  call s:assert.equal(final_line, 1, 'G command from beginning should return to beginning')
-  call s:assert.equal(final_col, 1, 'Should return to original column position')
+  
+  " このテストは現在の実装では失敗するはず
+  call s:assert.equal(final_line, content_last_line, 'G command should move to last content line, not return to previous position')
+  call s:assert.equal(final_col, 1, 'G command should move to beginning of last line')
 endfunction
