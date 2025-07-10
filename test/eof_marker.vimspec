@@ -30,7 +30,8 @@ endfunction
 
 " Phase 3.3: EOF マーク表示機能のテスト
 function! s:suite.test_eof_marker_display()
-  " テストデータを作成
+  " バッファをクリアしてテストデータを作成
+  %delete
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
   
@@ -175,8 +176,40 @@ function! s:suite.test_eof_marker_removal()
   call s:assert.equal(len(markers), 0, 'No markers should remain after removal')
 endfunction
 
-" Phase 3.9: Gコマンドの動作テスト
-function! s:suite.test_g_command_behavior()
+" Phase 3.9: ファイル末尾での移動制御テスト
+function! s:suite.test_end_of_file_movement()
+  " テストデータを作成
+  call append(0, ['line1', 'line2', 'line3'])
+  1delete " 空行を削除
+  
+  call eof_marker#add_eof_marker()
+  
+  " コンテンツの最後の行の途中に移動
+  let content_last_line = line('$') - 1
+  call cursor(content_last_line, 3)
+  
+  " カーソル制御機能を初期化（現在位置を記録）
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " 初期位置を記録
+  let initial_line = line('.')
+  let initial_col = col('.')
+  
+  " jキーでEOFマーカー行に移動を試行
+  call cursor(line('$'), 1)
+  
+  " カーソル制御機能を実行
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " 元の位置に戻されていることを確認（移動しない）
+  let final_line = line('.')
+  let final_col = col('.')
+  call s:assert.equal(final_line, initial_line, 'Should not move when trying to go beyond last line')
+  call s:assert.equal(final_col, initial_col, 'Should stay at same column position')
+endfunction
+
+" Phase 3.10: Gコマンドの特別な動作テスト
+function! s:suite.test_g_command_from_beginning()
   " テストデータを作成
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
@@ -186,9 +219,8 @@ function! s:suite.test_g_command_behavior()
   " ファイルの先頭に移動
   call cursor(1, 1)
   
-  " コンテンツの最後の行を記録
-  let content_last_line = line('$') - 1
-  let line_length = strlen(getline(content_last_line))
+  " カーソル制御機能を初期化（現在位置を記録）
+  call eof_marker#prevent_cursor_on_eof()
   
   " Gコマンドをシミュレート（EOFマーカー行に移動）
   call cursor(line('$'), 1)
@@ -196,12 +228,9 @@ function! s:suite.test_g_command_behavior()
   " カーソル制御機能を実行
   call eof_marker#prevent_cursor_on_eof()
   
-  " コンテンツの最後の行にいることを確認
+  " 先頭位置（記録された位置）に戻されていることを確認
   let final_line = line('.')
-  call s:assert.equal(final_line, content_last_line, 'G command should move to last content line')
-  
-  " カーソルが有効な位置にいることを確認（行末付近）
   let final_col = col('.')
-  call s:assert.true(final_col >= 1, 'Cursor should be at valid column position')
-  call s:assert.true(final_col <= line_length + 1, 'Cursor should be within valid range')
+  call s:assert.equal(final_line, 1, 'G command from beginning should return to beginning')
+  call s:assert.equal(final_col, 1, 'Should return to original column position')
 endfunction

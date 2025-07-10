@@ -200,8 +200,14 @@ function! eof_marker#prevent_cursor_on_eof()
       
       " EOFマーカーの行にカーソルがある場合の処理
       if current_line == eof_line
-        " コンテンツの最後の行の末尾に移動（Gコマンドの期待動作）
-        call cursor(content_last_line, col([content_last_line, '$']) - 1)
+        " 最後に記録された有効な位置に戻す（移動しないようにする）
+        if has_key(s:last_cursor_pos, bufnr)
+          let [last_line, last_col] = s:last_cursor_pos[bufnr]
+          call cursor(last_line, last_col)
+        else
+          " フォールバック: 最後の行の先頭に移動
+          call cursor(content_last_line, 1)
+        endif
       endif
     endif
   endif
