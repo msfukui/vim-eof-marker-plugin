@@ -75,18 +75,26 @@ function! s:suite.test_cursor_control()
   
   " 元のコンテンツの最後の行に移動
   let content_last_line = line('$') - 1
-  call cursor(content_last_line, 1)
+  call cursor(content_last_line, 3)  " 行の途中に位置
   
-  " EOFマーカーの行に移動を試みる
-  normal! j
-  let current_line = line('.')
+  " カーソル制御機能を初期化（現在位置を記録）
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " 記録された位置を確認
+  let initial_line = line('.')
+  let initial_col = col('.')
+  
+  " EOFマーカーの行に強制移動
+  call cursor(line('$'), 1)
   
   " カーソル制御機能をテスト
   call eof_marker#prevent_cursor_on_eof()
   let controlled_line = line('.')
+  let controlled_col = col('.')
   
-  " EOFマーカーの行ではなく、コンテンツの最後の行にいることを確認
-  call s:assert.equal(controlled_line, content_last_line, 'Cursor should be controlled to stay in content area')
+  " 元の位置に戻されていることを確認
+  call s:assert.equal(controlled_line, initial_line, 'Cursor line should return to original position')
+  call s:assert.equal(controlled_col, initial_col, 'Cursor column should return to original position')
 endfunction
 
 " Phase 3.6: ファイル保存時の処理テスト
