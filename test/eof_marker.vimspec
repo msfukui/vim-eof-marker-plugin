@@ -174,3 +174,34 @@ function! s:suite.test_eof_marker_removal()
   let markers = eof_marker#get_markers(bufnr('%'))
   call s:assert.equal(len(markers), 0, 'No markers should remain after removal')
 endfunction
+
+" Phase 3.9: Gコマンドの動作テスト
+function! s:suite.test_g_command_behavior()
+  " テストデータを作成
+  call append(0, ['line1', 'line2', 'line3'])
+  1delete " 空行を削除
+  
+  call eof_marker#add_eof_marker()
+  
+  " ファイルの先頭に移動
+  call cursor(1, 1)
+  
+  " コンテンツの最後の行を記録
+  let content_last_line = line('$') - 1
+  let line_length = strlen(getline(content_last_line))
+  
+  " Gコマンドをシミュレート（EOFマーカー行に移動）
+  call cursor(line('$'), 1)
+  
+  " カーソル制御機能を実行
+  call eof_marker#prevent_cursor_on_eof()
+  
+  " コンテンツの最後の行にいることを確認
+  let final_line = line('.')
+  call s:assert.equal(final_line, content_last_line, 'G command should move to last content line')
+  
+  " カーソルが有効な位置にいることを確認（行末付近）
+  let final_col = col('.')
+  call s:assert.true(final_col >= 1, 'Cursor should be at valid column position')
+  call s:assert.true(final_col <= line_length + 1, 'Cursor should be within valid range')
+endfunction

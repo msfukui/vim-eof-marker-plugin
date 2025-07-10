@@ -5,6 +5,7 @@
 let s:tracked_buffers = {}
 let s:eof_markers = {}
 let s:last_cursor_pos = {}
+let s:allow_eof_move = {}
 
 " バッファのセットアップ
 function! eof_marker#setup_buffer()
@@ -188,22 +189,19 @@ function! eof_marker#prevent_cursor_on_eof()
     let current_col = col('.')
     let marker = s:eof_markers[bufnr][0]
     
-    " 現在の位置を記録（EOFマーカー行でない場合のみ）
-    if !has_key(marker, 'eof_line') || current_line != marker.eof_line
-      let s:last_cursor_pos[bufnr] = [current_line, current_col]
-    endif
-    
-    " EOFマーカーの行にカーソルがある場合、最後の有効な位置に戻す
-    if has_key(marker, 'eof_line') && current_line == marker.eof_line
-      if has_key(s:last_cursor_pos, bufnr)
-        let [last_line, last_col] = s:last_cursor_pos[bufnr]
-        call cursor(last_line, last_col)
-      else
-        " フォールバック: 前の行に移動
-        let prev_line = marker.eof_line - 1
-        if prev_line > 0
-          call cursor(prev_line, col([prev_line, '$']) - 1)
-        endif
+    if has_key(marker, 'eof_line')
+      let eof_line = marker.eof_line
+      let content_last_line = eof_line - 1
+      
+      " 現在の位置を記録（EOFマーカー行でない場合のみ）
+      if current_line != eof_line
+        let s:last_cursor_pos[bufnr] = [current_line, current_col]
+      endif
+      
+      " EOFマーカーの行にカーソルがある場合の処理
+      if current_line == eof_line
+        " コンテンツの最後の行の末尾に移動（Gコマンドの期待動作）
+        call cursor(content_last_line, col([content_last_line, '$']) - 1)
       endif
     endif
   endif
