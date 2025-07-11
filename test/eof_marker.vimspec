@@ -34,25 +34,25 @@ function! s:suite.test_eof_marker_display()
   %delete
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
-  
+
   " 元の行数を記録
   let original_lines = line('$')
   let last_line_content = getline(line('$'))
-  
+
   " EOFマーカーを追加
   call eof_marker#add_eof_marker()
-  
+
   " マーカー情報をチェック
   let markers = eof_marker#get_markers(bufnr('%'))
   call s:assert.equal(len(markers), 1)
   call s:assert.equal(markers[0].text, '[EOF]')
-  
+
   " 重要: EOFマーカーが独立した行に表示されることを確認
   call s:assert.equal(line('$'), original_lines + 1, 'EOF marker should add a new line')
-  
+
   " 最後の行の内容が空であることを確認（textpropで表示される）
   call s:assert.equal(getline(line('$')), '', 'EOF marker line should be empty')
-  
+
   " 元の最後の行の内容が変更されていないことを確認
   call s:assert.equal(getline(original_lines), last_line_content, 'Original last line should not be modified')
 endfunction
@@ -62,7 +62,7 @@ function! s:suite.test_eof_marker_styling()
   " プラグインを読み込んでからハイライトグループをチェック
   runtime! plugin/eof_marker.vim
   call s:assert.true(hlexists('EofMarker'))
-  
+
   " 灰色のハイライトが適用されているかテスト
   let hl = eof_marker#get_highlight_info()
   call s:assert.true(!empty(hl.ctermfg) || !empty(hl.guifg))
@@ -73,26 +73,26 @@ function! s:suite.test_cursor_control()
   call append(0, ['line1', 'line2'])
   1delete " 空行を削除
   call eof_marker#add_eof_marker()
-  
+
   " 元のコンテンツの最後の行に移動
   let content_last_line = line('$') - 1
   call cursor(content_last_line, 3)  " 行の途中に位置
-  
+
   " カーソル制御機能を初期化（現在位置を記録）
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " 記録された位置を確認
   let initial_line = line('.')
   let initial_col = col('.')
-  
+
   " EOFマーカーの行に強制移動
   call cursor(line('$'), 1)
-  
+
   " カーソル制御機能をテスト
   call eof_marker#prevent_cursor_on_eof()
   let controlled_line = line('.')
   let controlled_col = col('.')
-  
+
   " 元の位置に戻されていることを確認
   call s:assert.equal(controlled_line, initial_line, 'Cursor line should return to original position')
   call s:assert.equal(controlled_col, initial_col, 'Cursor column should return to original position')
@@ -105,30 +105,30 @@ function! s:suite.test_file_saving()
   " バッファの状態を安定させる
   %delete
   call setline(1, ['line1', 'line2'])
-  
+
   " 保存前の行数を記録
   let lines_before_eof = line('$')
-  
+
   call eof_marker#add_eof_marker()
-  
+
   " EOFマーカー追加後の行数を確認
   let lines_after_eof = line('$')
   call s:assert.equal(lines_after_eof, lines_before_eof + 1, 'EOF marker should add one line')
-  
+
   " 強制保存
   execute 'write! ' . temp_file
   let content = readfile(temp_file)
-  
+
   " 保存されたファイルにEOFマーカーが含まれていないことを確認
   call s:assert.equal(len(content), lines_before_eof, 'Saved file should not include EOF marker line')
-  
+
   for line in content
     call s:assert.not_match(line, '\[EOF\]', 'EOF marker text should not be in saved content')
   endfor
-  
+
   " 期待される内容と一致することを確認
   call s:assert.equal(content, ['line1', 'line2'], 'Saved content should match original')
-  
+
   call delete(temp_file)
 endfunction
 
@@ -137,19 +137,19 @@ function! s:suite.test_eof_marker_position()
   " 一般的なテキストでテスト
   call append(0, ['Hello, world!', 'This is a test file.', 'Last line of content.'])
   1delete " 空行を削除
-  
+
   " 最後の行の内容を記録
   let last_line_original = getline(line('$'))
-  
+
   call eof_marker#add_eof_marker()
-  
+
   " 最後の行の内容が変更されていないことを確認（重要）
   let content_last_line = line('$') - 1
   call s:assert.equal(getline(content_last_line), last_line_original, 'Last content line should not be modified')
-  
+
   " 最後の行に [EOF] が追加されていないことを確認
   call s:assert.not_match(getline(content_last_line), '\[EOF\]', 'EOF marker should not be appended to content line')
-  
+
   " EOFマーカーが独立した行にあることを確認
   call s:assert.equal(getline(line('$')), '', 'EOF marker should be on its own empty line')
 endfunction
@@ -160,17 +160,17 @@ function! s:suite.test_eof_marker_removal()
   %delete
   call append(0, ['First line', 'Second line'])
   1delete " 空行を削除
-  
+
   let original_lines = line('$')
-  
+
   " マーカーを追加
   call eof_marker#add_eof_marker()
   call s:assert.equal(line('$'), original_lines + 1, 'EOF marker should add a line')
-  
+
   " マーカーを削除
   call eof_marker#remove_eof_marker()
   call s:assert.equal(line('$'), original_lines, 'EOF marker line should be removed')
-  
+
   " マーカー情報がクリアされていることを確認
   let markers = eof_marker#get_markers(bufnr('%'))
   call s:assert.equal(len(markers), 0, 'No markers should remain after removal')
@@ -181,26 +181,26 @@ function! s:suite.test_end_of_file_movement()
   " テストデータを作成
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
-  
+
   call eof_marker#add_eof_marker()
-  
+
   " コンテンツの最後の行の途中に移動
   let content_last_line = line('$') - 1
   call cursor(content_last_line, 3)
-  
+
   " カーソル制御機能を初期化（現在位置を記録）
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " 初期位置を記録
   let initial_line = line('.')
   let initial_col = col('.')
-  
+
   " jキーでEOFマーカー行に移動を試行
   call cursor(line('$'), 1)
-  
+
   " カーソル制御機能を実行
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " 元の位置に戻されていることを確認（移動しない）
   let final_line = line('.')
   let final_col = col('.')
@@ -213,18 +213,18 @@ function! s:suite.test_g_command_proper_behavior()
   " テストデータを作成
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
-  
+
   call eof_marker#add_eof_marker()
-  
+
   " ファイルの先頭に移動
   call cursor(1, 1)
-  
+
   " Gコマンドをシミュレート（EOFマーカー行に移動）
   call cursor(line('$'), 1)
-  
+
   " カーソル制御機能を実行
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " コンテンツの最後の行の先頭に移動していることを確認（Gコマンドの期待動作）
   let content_last_line = line('$') - 1
   let final_line = line('.')
@@ -238,26 +238,26 @@ function! s:suite.test_j_movement_prevention()
   " テストデータを作成
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
-  
+
   call eof_marker#add_eof_marker()
-  
+
   " コンテンツの最後の行の途中に移動
   let content_last_line = line('$') - 1
   call cursor(content_last_line, 3)
-  
+
   " カーソル制御機能を初期化（現在位置を記録）
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " 初期位置を記録
   let initial_line = line('.')
   let initial_col = col('.')
-  
+
   " jキーでEOFマーカー行に移動を試行
   call cursor(line('$'), 1)
-  
+
   " カーソル制御機能を実行
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " 元の位置に戻されていることを確認（移動しない）
   let final_line = line('.')
   let final_col = col('.')
@@ -270,27 +270,27 @@ function! s:suite.test_g_command_actual_scenario()
   " テストデータを作成
   call append(0, ['line1', 'line2', 'line3'])
   1delete " 空行を削除
-  
+
   call eof_marker#add_eof_marker()
-  
+
   " ファイルの途中に移動
   call cursor(2, 2)
-  
+
   " カーソル制御機能を初期化（現在位置を記録）
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " Gコマンドをシミュレート（EOFマーカー行に移動）
   call cursor(line('$'), 1)
-  
+
   " カーソル制御機能を実行
   call eof_marker#prevent_cursor_on_eof()
-  
+
   " コンテンツの最後の行の先頭に移動していることを確認（Gコマンドの期待動作）
   " 現在の実装では途中の位置（2行目、2列目）に戻ってしまう問題をテスト
   let content_last_line = line('$') - 1
   let final_line = line('.')
   let final_col = col('.')
-  
+
   " このテストは現在の実装では失敗するはず
   call s:assert.equal(final_line, content_last_line, 'G command should move to last content line, not return to previous position')
   call s:assert.equal(final_col, 1, 'G command should move to beginning of last line')

@@ -12,10 +12,10 @@ function! eof_marker#setup_buffer()
   if !g:eof_marker_enabled
     return
   endif
-  
+
   let bufnr = bufnr('%')
   let s:tracked_buffers[bufnr] = 1
-  
+
   " EOF マーカーを追加
   call eof_marker#add_eof_marker()
 endfunction
@@ -30,18 +30,15 @@ function! eof_marker#add_eof_marker()
   if !g:eof_marker_enabled
     return
   endif
-  
+
   let bufnr = bufnr('%')
-  
+
   " 既存のマーカーを削除
   call eof_marker#remove_eof_marker()
-  
-  " Virtual textが利用可能な場合はtextpropを使用
+
+  " textprop を利用
   if has('textprop')
     call eof_marker#add_eof_marker_textprop()
-  else
-    " フォールバック: signを使用
-    call eof_marker#add_eof_marker_sign()
   endif
 endfunction
 
@@ -49,19 +46,19 @@ endfunction
 function! eof_marker#add_eof_marker_textprop()
   let bufnr = bufnr('%')
   let last_line = line('$')
-  
+
   " 空行を追加してEOFマーカー用の行を作成
   call append(last_line, '')
   let eof_line = last_line + 1
-  
+
   " プロパティタイプを定義（バッファごとに個別に管理）
   let prop_name = 'eof_marker_' . bufnr
   try
     call prop_type_add(prop_name, {
-      \ 'highlight': 'EofMarker',
-      \ 'priority': 100,
-      \ 'bufnr': bufnr
-      \ })
+          \ 'highlight': 'EofMarker',
+          \ 'priority': 100,
+          \ 'bufnr': bufnr
+          \ })
   catch /E969:/
     " プロパティタイプが既に存在する場合は削除して再作成
     try
@@ -69,52 +66,33 @@ function! eof_marker#add_eof_marker_textprop()
     catch
     endtry
     call prop_type_add(prop_name, {
-      \ 'highlight': 'EofMarker',
-      \ 'priority': 100,
-      \ 'bufnr': bufnr
-      \ })
+          \ 'highlight': 'EofMarker',
+          \ 'priority': 100,
+          \ 'bufnr': bufnr
+          \ })
   endtry
-  
+
   " 新しい行にEOF マーカーを追加
   call prop_add(eof_line, 1, {
-    \ 'type': prop_name,
-    \ 'text': g:eof_marker_text,
-    \ 'bufnr': bufnr
-    \ })
-  
-  " マーカー情報を保存
-  let s:eof_markers[bufnr] = [{
-    \ 'text': g:eof_marker_text,
-    \ 'line': eof_line,
-    \ 'type': 'textprop',
-    \ 'prop_name': prop_name,
-    \ 'eof_line': eof_line
-    \ }]
-endfunction
+        \ 'type': prop_name,
+        \ 'text': g:eof_marker_text,
+        \ 'bufnr': bufnr
+        \ })
 
-" signを使用してEOFマーカーを追加（フォールバック）
-function! eof_marker#add_eof_marker_sign()
-  let bufnr = bufnr('%')
-  let last_line = line('$')
-  
-  " サインを定義
-  execute 'sign define eof_marker text=' . g:eof_marker_text . ' texthl=EofMarker'
-  
-  " サインを配置
-  execute 'sign place 999 line=' . last_line . ' name=eof_marker buffer=' . bufnr
-  
   " マーカー情報を保存
   let s:eof_markers[bufnr] = [{
-    \ 'text': g:eof_marker_text,
-    \ 'line': last_line,
-    \ 'type': 'sign'
-    \ }]
+        \ 'text': g:eof_marker_text,
+        \ 'line': eof_line,
+        \ 'type': 'textprop',
+        \ 'prop_name': prop_name,
+        \ 'eof_line': eof_line
+        \ }]
 endfunction
 
 " EOF マーカーを削除
 function! eof_marker#remove_eof_marker()
   let bufnr = bufnr('%')
-  
+
   if has_key(s:eof_markers, bufnr)
     for marker in s:eof_markers[bufnr]
       if marker.type == 'textprop'
@@ -126,7 +104,7 @@ function! eof_marker#remove_eof_marker()
         catch
           " エラーが発生した場合は無視
         endtry
-        
+
         " EOFマーカー用に追加した空行を削除
         if has_key(marker, 'eof_line')
           let eof_line = marker.eof_line
@@ -135,9 +113,6 @@ function! eof_marker#remove_eof_marker()
             execute eof_line . 'delete'
           endif
         endif
-      elseif marker.type == 'sign'
-        " サインを削除
-        execute 'sign unplace 999 buffer=' . bufnr
       endif
     endfor
     unlet s:eof_markers[bufnr]
@@ -155,17 +130,17 @@ endfunction
 " ハイライト情報を取得
 function! eof_marker#get_highlight_info()
   let hl_info = {'ctermfg': '', 'guifg': ''}
-  
+
   " ハイライトグループの情報を取得
   try
     redir => hl_output
     silent highlight EofMarker
     redir END
-    
+
     " ctermfgとguifgを抽出（数値とカラーコードの両方に対応）
     let hl_info.ctermfg = matchstr(hl_output, 'ctermfg=\zs\S\+')
     let hl_info.guifg = matchstr(hl_output, 'guifg=\zs\S\+')
-    
+
     " デフォルト値が設定されているかチェック
     if empty(hl_info.ctermfg) && empty(hl_info.guifg)
       let hl_info.ctermfg = '242'
@@ -176,7 +151,7 @@ function! eof_marker#get_highlight_info()
     let hl_info.ctermfg = '242'
     let hl_info.guifg = '#6c6c6c'
   endtry
-  
+
   return hl_info
 endfunction
 
@@ -216,25 +191,25 @@ endfunction
 " カーソルがEOFマーカー上に移動するのを防ぐ
 function! eof_marker#prevent_cursor_on_eof()
   let bufnr = bufnr('%')
-  
+
   if !has_key(s:eof_markers, bufnr)
     return
   endif
-  
+
   let current_line = line('.')
   let current_col = col('.')
   let marker = s:eof_markers[bufnr][0]
-  
+
   if !has_key(marker, 'eof_line')
     return
   endif
-  
+
   let eof_line = marker.eof_line
   let content_last_line = eof_line - 1
-  
+
   " 現在の位置を記録（EOFマーカー行でない場合のみ）
   call s:record_cursor_position(bufnr, current_line, current_col, eof_line)
-  
+
   " EOFマーカーの行にカーソルがある場合の処理
   if current_line == eof_line
     if eof_marker#is_g_command_movement(bufnr, content_last_line)

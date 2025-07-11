@@ -2,6 +2,8 @@
 
 Vimのファイルバッファの末尾に薄い灰色で "[EOF]" マークを表示するだけのプラグインです。
 
+textprop を使用しており、Vim 8.1+ で動作します。
+
 ## インストール
 
 ### vim-plug の場合
@@ -116,4 +118,3 @@ MIT License (https://opensource.org/license/mit/)
 - 基本的なEOFマーカー表示機能
 - カーソル制御機能
 - ファイル保存時の処理
-
