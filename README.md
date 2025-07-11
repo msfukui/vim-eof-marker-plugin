@@ -1,29 +1,16 @@
 # Vim EOF Marker Plugin
 
-Vimのファイルバッファの末尾に薄い灰色で "[EOF]" マークを表示するプラグインです。
-
-## 特徴
-
-- ファイルバッファの一番末尾に "[EOF]" を薄い灰色で表示
-- カーソルは "[EOF]" マークに移動できない
-- "[EOF]" マークはファイル内容に含まれない（表示専用）
-- 通常のVim（NeoVimではない）で動作
-- TDD（Test-Driven Development）で開発
-- vim-themisテストフレームワークを使用
+Vimのファイルバッファの末尾に薄い灰色で "[EOF]" マークを表示するだけのプラグインです。
 
 ## インストール
 
-### vim-plugを使用する場合
+### vim-plug の場合
 
 ```vim
-Plug 'msfukui/vim-eof-plugin'
+Plug 'msfukui/vim-eof-marker-plugin'
 ```
 
-### Vundleを使用する場合
-
-```vim
-Plugin 'msfukui/vim-eof-plugin'
-```
+他のプラグインマネージャーの場合も同様によしなに指定してください。
 
 ### 手動インストール
 
@@ -64,7 +51,7 @@ let g:eof_marker_text = '~ END ~'    " カスタム
 ### カラーのカスタマイズ
 
 ```vim
-" より薄いグレーに設定（デフォルト）
+" 薄いグレーに設定（デフォルト）
 let g:eof_marker_highlight = {'ctermfg': 244, 'guifg': '#808080'}
 
 " さらに薄くしたい場合
@@ -82,8 +69,6 @@ let g:eof_marker_highlight = {'ctermfg': 248, 'guifg': '#a8a8a8'}
 - `250`: 最も薄いグレー
 
 ## 開発
-
-このプラグインはTDD（Test-Driven Development）で開発されています。
 
 ### テストの実行
 
@@ -114,30 +99,15 @@ vim-eof-plugin/
 └── LICENSE                     # ライセンス
 ```
 
-## 技術的詳細
+## 詳細
 
-### Virtual Text vs Sign機能
+### 作成者
 
-プラグインは、Vimのバージョンに応じて最適な表示方法を自動選択します:
-
-- **Vim 8.1以降**: `textprop`機能を使用してVirtual Textで表示
-- **Vim 8.0以前**: `sign`機能を使用してフォールバック表示
-
-### TDD開発プロセス
-
-このプラグインは以下のTDDサイクルで開発されました:
-
-1. **Red**: 失敗するテストを書く
-2. **Green**: テストをパスする最小限の実装を書く  
-3. **Refactor**: コードを改善する
+このプラグインは Cline + copilot - claude-sonnet-4 を使用して作成されました。
 
 ## ライセンス
 
-MIT License
-
-## 貢献
-
-バグ報告や機能追加の提案は、GitHubのIssuesでお願いします。
+MIT License (https://opensource.org/license/mit/)
 
 ## 変更履歴
 
@@ -146,4 +116,4 @@ MIT License
 - 基本的なEOFマーカー表示機能
 - カーソル制御機能
 - ファイル保存時の処理
-- TDDによる包括的なテストカバレッジ
+
