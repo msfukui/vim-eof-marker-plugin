@@ -109,8 +109,11 @@ function! eof_marker#remove_eof_marker()
         if has_key(marker, 'eof_line')
           let eof_line = marker.eof_line
           " 行が存在し、空行であれば削除
-          if eof_line <= line('$') && getline(eof_line) == ''
-            execute eof_line . 'delete'
+          " 修正: 現在の最終行を基準にして削除判定
+          let current_last_line = line('$')
+          if current_last_line > 0 && getline(current_last_line) == '' && 
+           \ (eof_line <= current_last_line)
+            execute current_last_line . 'delete'
           endif
         endif
       endif
